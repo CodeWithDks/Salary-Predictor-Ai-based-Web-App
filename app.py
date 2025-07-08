@@ -4,7 +4,9 @@ import joblib
 import numpy as np
 import os
 from datetime import datetime
-from job_grouper import JobGrouper
+from transformers.feature_engineer import FeatureEngineer
+from transformers.education_encoder import EducationEncoder
+from transformers.job_grouper import JobGrouper
 from sklearn.base import BaseEstimator, TransformerMixin
 
 # Define custom transformers directly in app.py
@@ -19,49 +21,6 @@ class SalaryCorrector(BaseEstimator, TransformerMixin):
         X = X.copy()
         if 'Salary' in X.columns:
             X['Salary'] = X['Salary'].apply(lambda x: x if x > THRESHOLD_SALARY else x * 100)
-        return X
-
-class FeatureEngineer(BaseEstimator, TransformerMixin):
-    """Creates new features from existing ones"""
-    def fit(self, X, y=None):
-        return self
-
-    def transform(self, X):
-        X = X.copy()
-        
-        # Ensure numeric columns are properly typed
-        X['Age'] = pd.to_numeric(X['Age'], errors='coerce')
-        X['Years of Experience'] = pd.to_numeric(X['Years of Experience'], errors='coerce')
-        
-        # Basic features
-        X['Experience_Squared'] = X['Years of Experience'] ** 2
-        X['Age_Experience_Ratio'] = X['Age'] / (X['Years of Experience'] + 1)
-
-        # Career stage based on experience
-        X['Career_Stage'] = np.where(
-            X['Years of Experience'] < 5, 'Early',
-            np.where(X['Years of Experience'] < 15, 'Mid', 'Late')
-        )
-
-        # Age buckets
-        X['Age_Group'] = pd.cut(X['Age'], bins=[0, 30, 40, 50, 100],
-                               labels=['Under_30', '30-40', '40-50', 'Over_50'])
-        X['Age_Group'] = X['Age_Group'].astype(str)
-        
-        return X
-
-class EducationEncoder(BaseEstimator, TransformerMixin):
-    """Encodes education level with proper handling"""
-    def __init__(self):
-        self.education_map = {"Bachelor's": 1, "Master's": 2, "PhD": 3}
-        self.unknown_value = 1  # Default to Bachelor's for unknown values
-    
-    def fit(self, X, y=None):
-        return self
-    
-    def transform(self, X):
-        X = X.copy()
-        X['Education_Level_Encoded'] = X['Education Level'].map(self.education_map).fillna(self.unknown_value)
         return X
 
 app = Flask(__name__)

@@ -14,7 +14,7 @@ from sklearn.inspection import permutation_importance
 import shap
 import joblib
 import warnings
-from job_grouper import JobGrouper
+from transformers.job_grouper import JobGrouper
 warnings.filterwarnings('ignore')
 
 # Constants
